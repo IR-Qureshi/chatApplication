@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "226021195886",
+    "firebase_url": "https://wechat-12de3.firebaseio.com",
+    "project_id": "wechat-12de3",
+    "storage_bucket": "wechat-12de3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:226021195886:android:ff00f090a78988e6",
+        "android_client_info": {
+          "package_name": "com.example.dellpc.wechat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "226021195886-cchtb48f57330grc162hsd8nflg763sr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.dellpc.wechat",
+            "certificate_hash": "51EB9C77BF50E4ABE8CF4966F72441588175C8C2"
+          }
+        },
+        {
+          "client_id": "226021195886-h601fvdtvp80kojn92nchhoh5jil5o1h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyClh5PAWC2SJeOMO7dNh0ar09UmX6RDwww"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "226021195886-h601fvdtvp80kojn92nchhoh5jil5o1h.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
