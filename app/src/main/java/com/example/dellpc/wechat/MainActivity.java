@@ -225,7 +225,7 @@ public class MainActivity extends AppCompatActivity {
                 if(!fm.getName().equals(mUsername)){
                     mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-                    //NotificationCompat.Builder mBuilder = new NotificationCompat.Builder()
+                   // NotificationCompat.Builder mBuilder = new NotificationCompat.Builder()
                 }
             }
 
