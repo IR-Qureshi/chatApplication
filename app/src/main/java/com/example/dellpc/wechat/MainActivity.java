@@ -1,10 +1,13 @@
 package com.example.dellpc.wechat;
 
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.media.RingtoneManager;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.v4.app.TaskStackBuilder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.app.NotificationCompat;
@@ -12,7 +15,6 @@ import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -24,7 +26,6 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.facebook.CallbackManager;
 import com.facebook.FacebookSdk;
 import com.facebook.appevents.AppEventsLogger;
 import com.firebase.ui.auth.AuthUI;
@@ -38,14 +39,11 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.firebase.ui.auth.ui.AcquireEmailHelper.RC_SIGN_IN;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
@@ -81,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseStorage mFirebaseStorage;
     private StorageReference mChatPhotoStorageReference;
     private NotificationManager mNotificationManager;
+    private Intent notificationIntent;
 
     //to read from each child
     private ChildEventListener mChildEventListener;
@@ -183,6 +182,8 @@ public class MainActivity extends AppCompatActivity {
 
                 // Clear input box
                 mMessageEditText.setText("");
+
+
             }
         });
 
@@ -217,23 +218,42 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        //working for notification.
-        mDatabaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                FriendlyMessage fm = dataSnapshot.getValue(FriendlyMessage.class);
-                if(!fm.getName().equals(mUsername)){
-                    mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-                   // NotificationCompat.Builder mBuilder = new NotificationCompat.Builder()
-                }
-            }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
+//        //working for notification.
+//        mDatabaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//                FriendlyMessage fm = dataSnapshot.getValue(FriendlyMessage.class);
+//                //if(!fm.getName().equals(mUsername)){
+//
+//
+//                }
+//           // }
+//
+//
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//
+//            }
+//        });
 
-            }
-        });
+//        mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+//
+//        android.support.v4.app.NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(MainActivity.this)
+//                .setContentTitle("New Message from: "+ friendlyMessage.getName())
+//                .setContentText(friendlyMessage.getText())
+//                .setOnlyAlertOnce(true)
+//                .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
+//        notificationIntent = getIntent();
+//        PendingIntent contentIntent = PendingIntent.getActivity(MainActivity.this,0,notificationIntent,PendingIntent.FLAG_UPDATE_CURRENT);
+//        mBuilder.setContentIntent(contentIntent);
+//
+//        mBuilder.setAutoCancel(true);
+//        mBuilder.setLocalOnly(false);
+//
+//        mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+//        mNotificationManager.notify(0,mBuilder.build());
 
 
     }
@@ -247,6 +267,7 @@ public class MainActivity extends AppCompatActivity {
 
                 Log.d("Signin", "onActivityResult: " + " OK");
                 Toast.makeText(this, "Signed In", Toast.LENGTH_SHORT).show();
+
             } else if (requestCode == RESULT_CANCELED) {
                 Toast.makeText(this, "Sign in cancelled", Toast.LENGTH_SHORT).show();
                 finish();
@@ -275,6 +296,8 @@ public class MainActivity extends AppCompatActivity {
             }
 
     }
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -331,6 +354,28 @@ public class MainActivity extends AppCompatActivity {
                     //and attaching the message to an adapter.
                     FriendlyMessage friendlyMessage = dataSnapshot.getValue(FriendlyMessage.class);
                     mMessageAdapter.add(friendlyMessage);
+
+//                    NotificationCompat.Builder mBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(MainActivity.this)
+//                            .setSmallIcon(R.drawable.ic_email_white_18dp)
+//                            .setContentTitle("WeChat")
+//                            .setContentText(friendlyMessage.getName().toString());
+//
+//                    Intent resultIntent =new Intent(MainActivity.this, MainActivity.class);
+//
+//                    TaskStackBuilder stackBuilder = TaskStackBuilder.create(MainActivity.this);
+//                    stackBuilder.addParentStack(MainActivity.this);
+//
+//                    stackBuilder.addNextIntent(resultIntent);
+//
+//                    PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0,PendingIntent.FLAG_UPDATE_CURRENT);
+//
+//                    mBuilder.setContentIntent(resultPendingIntent);
+//
+//                    NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+//
+//                    int mId=0;
+//                    mNotificationManager.notify(mId, mBuilder.build());
+
 
                 }
 
