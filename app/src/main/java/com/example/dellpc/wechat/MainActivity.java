@@ -12,10 +12,12 @@ import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -68,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageButton mPhotoPickerButton;
     private EditText mMessageEditText;
     private Button mSendButton;
+    private int mPosition;
 
     private String mUsername;
 
@@ -253,7 +256,7 @@ public class MainActivity extends AppCompatActivity {
 //
 //        mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 //        mNotificationManager.notify(0,mBuilder.build());
-
+        registerForContextMenu(mMessageListView);
 
     }
 
@@ -359,8 +362,8 @@ public class MainActivity extends AppCompatActivity {
                     FriendlyMessage friendlyMessage = dataSnapshot.getValue(FriendlyMessage.class);
                     mMessageAdapter.add(friendlyMessage);
 
-                    DownloadTask downloadTask = new DownloadTask();
-                    downloadTask.execute(friendlyMessage.getPhotoUrl());
+//                    DownloadTask downloadTask = new DownloadTask();
+//                    downloadTask.execute(friendlyMessage.getPhotoUrl());
 
 //                    NotificationCompat.Builder mBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(MainActivity.this)
 //                            .setSmallIcon(R.drawable.ic_email_white_18dp)
@@ -415,6 +418,33 @@ public class MainActivity extends AppCompatActivity {
         if (mChildEventListener != null) {
             mDatabaseReference.removeEventListener(mChildEventListener);
             mChildEventListener = null;
+        }
+
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+
+        if(v.getId() == R.id.messageListView);
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.item_menu,menu);
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.image_save:
+                AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo ) item.getMenuInfo();
+                //getting a current position.
+                mPosition = info.position;
+                //putting the position to the adapter.
+                FriendlyMessage friendlyMessage1 = mMessageAdapter.getItem(mPosition);
+                //calling the asyncing task class.
+                DownloadTask downloadTask = new DownloadTask();
+                downloadTask.execute(friendlyMessage1.getPhotoUrl());
+            default:
+                return super.onContextItemSelected(item);
         }
 
     }
