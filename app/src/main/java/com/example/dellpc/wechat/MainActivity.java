@@ -1,8 +1,10 @@
 package com.example.dellpc.wechat;
 
 import android.app.NotificationManager;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -36,12 +38,20 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
-
 
 
     //Request code
@@ -84,7 +94,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
 
-
         setContentView(R.layout.activity_main);
 
         FacebookSdk.sdkInitialize(getApplicationContext());
@@ -103,9 +112,7 @@ public class MainActivity extends AppCompatActivity {
         mChatPhotoStorageReference = mFirebaseStorage.getReference().child("chat_photos");
 
 
-
         mUsername = ANONYMOUS;
-
 
 
         // Initialize references to views
@@ -140,7 +147,7 @@ public class MainActivity extends AppCompatActivity {
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
                 intent.setType("image/jpeg");
                 intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
-                startActivityForResult(Intent.createChooser(intent,"Complete action using"), RC_PHOTO_PICKER);
+                startActivityForResult(Intent.createChooser(intent, "Complete action using"), RC_PHOTO_PICKER);
                 //friendlyMessage.setPhotoUrl(intent.getData().toString());
             }
         });
@@ -186,13 +193,12 @@ public class MainActivity extends AppCompatActivity {
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
 
                 FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
-                if(firebaseUser != null){
+                if (firebaseUser != null) {
                     //user is signed in
                     onSignedInInitialize(firebaseUser.getDisplayName());
                     //Toast.makeText(MainActivity.this, "You're Signed in Welcome to the Friendly Chat App", Toast.LENGTH_SHORT).show();
 
-                }
-                else{
+                } else {
                     //user is signed out
 
                     onSignedOutCleanup();
@@ -211,7 +217,6 @@ public class MainActivity extends AppCompatActivity {
 
             }
         };
-
 
 
 //        //working for notification.
@@ -256,7 +261,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == RC_SIGN_IN) {
+        if (requestCode == RC_SIGN_IN) {
             if (resultCode == RESULT_OK) {
 
                 Log.d("Signin", "onActivityResult: " + " OK");
@@ -265,32 +270,35 @@ public class MainActivity extends AppCompatActivity {
             } else if (requestCode == RESULT_CANCELED) {
                 Toast.makeText(this, "Sign in cancelled", Toast.LENGTH_SHORT).show();
                 finish();
-            } }else if (requestCode == RC_PHOTO_PICKER && resultCode == RESULT_OK) {
-                Uri selectedImageUri = data.getData();
-                //reference to the specific photo.
-                //taking the refernce of chat photos and making a child and named it by last part of the part segment for the uri.
-                //example if content:local_images/foo/4
-                //so it will get the name 4
-                //then the file name that will will storing in app will be 4.
-                // at this part we'll got the ref location of the photo which we're going to save, and we've get the uri of the image which we're going to save.
-                StorageReference photoRef = mChatPhotoStorageReference.child(selectedImageUri.getLastPathSegment());
-
-                //upload the file to firebase Storage.
-                photoRef.putFile(selectedImageUri).addOnSuccessListener(this, new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                    @Override
-                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                        //with the help of this url we'll be saving it to our weChat database along with other messages.
-                        Uri downloadUrl = taskSnapshot.getDownloadUrl();
-
-                        FriendlyMessage friendlyMessage = new FriendlyMessage(null, mUsername, downloadUrl.toString());
-                        mDatabaseReference.push().setValue(friendlyMessage);
-
-                    }
-                });
             }
+        } else if (requestCode == RC_PHOTO_PICKER && resultCode == RESULT_OK) {
+            Uri selectedImageUri = data.getData();
+            //reference to the specific photo.
+            //taking the refernce of chat photos and making a child and named it by last part of the part segment for the uri.
+            //example if content:local_images/foo/4
+            //so it will get the name 4
+            //then the file name that will will storing in app will be 4.
+            // at this part we'll got the ref location of the photo which we're going to save, and we've get the uri of the image which we're going to save.
+            StorageReference photoRef = mChatPhotoStorageReference.child(selectedImageUri.getLastPathSegment());
+
+            //upload the file to firebase Storage.
+            photoRef.putFile(selectedImageUri).addOnSuccessListener(this, new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                    //with the help of this url we'll be saving it to our weChat database along with other messages.
+                    Uri downloadUrl = taskSnapshot.getDownloadUrl();
+
+                    FriendlyMessage friendlyMessage = new FriendlyMessage(null, mUsername, downloadUrl.toString());
+                    mDatabaseReference.push().setValue(friendlyMessage);
+
+//                    DownloadTask downloadTask = new DownloadTask();
+//                    downloadTask.execute(downloadUrl.toString());
+
+                }
+            });
+        }
 
     }
-
 
 
     @Override
@@ -302,7 +310,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()){
+        switch (item.getItemId()) {
             case R.id.sign_out_menu:
                 AuthUI.getInstance().signOut(this);
                 return true;
@@ -321,25 +329,27 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        if(mAuthStateListener != null) {
+        if (mAuthStateListener != null) {
             mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
         }
         detachDatabaseReadListener();
         mMessageAdapter.clear();
     }
 
-    private void onSignedInInitialize(String username){
+    private void onSignedInInitialize(String username) {
         mUsername = username;
         attachDatabaseReadListener();
     }
-    private void onSignedOutCleanup(){
+
+    private void onSignedOutCleanup() {
         mUsername = ANONYMOUS;
         mMessageAdapter.clear();
         detachDatabaseReadListener();
 
     }
-    private void attachDatabaseReadListener(){
-        if(mChildEventListener == null) {
+
+    private void attachDatabaseReadListener() {
+        if (mChildEventListener == null) {
             mChildEventListener = new ChildEventListener() {
                 @Override
                 public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -348,6 +358,9 @@ public class MainActivity extends AppCompatActivity {
                     //and attaching the message to an adapter.
                     FriendlyMessage friendlyMessage = dataSnapshot.getValue(FriendlyMessage.class);
                     mMessageAdapter.add(friendlyMessage);
+
+                    DownloadTask downloadTask = new DownloadTask();
+                    downloadTask.execute(friendlyMessage.getPhotoUrl());
 
 //                    NotificationCompat.Builder mBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(MainActivity.this)
 //                            .setSmallIcon(R.drawable.ic_email_white_18dp)
@@ -397,12 +410,87 @@ public class MainActivity extends AppCompatActivity {
             mDatabaseReference.addChildEventListener(mChildEventListener);
         }
     }
-    private void detachDatabaseReadListener(){
-        if(mChildEventListener != null) {
+
+    private void detachDatabaseReadListener() {
+        if (mChildEventListener != null) {
             mDatabaseReference.removeEventListener(mChildEventListener);
             mChildEventListener = null;
         }
 
     }
 
+    class DownloadTask extends AsyncTask<String, Integer, String> {
+
+        ProgressDialog mProgressDialog;
+
+        @Override
+        protected String doInBackground(String... params) {
+            String path =  params[0];
+            int file_lenght = 0;
+            try {
+                URL url = new URL(path);
+                URLConnection urlConnection = url.openConnection();
+                urlConnection.connect();
+                file_lenght = urlConnection.getContentLength();
+                File newFolder = new File("sdcard/myphotos");
+                if(!newFolder.exists()){
+                    newFolder.mkdir();
+                }
+
+                File inputFile = new File(newFolder,"downloadedImage.jpg");
+                InputStream mInputStream = new BufferedInputStream(url.openStream(),8192);
+                byte[] data = new byte[1024];
+                int total = 0;
+                int count = 0;
+
+                OutputStream outputStream = new FileOutputStream(inputFile);
+                while ((count = mInputStream.read())!= -1){
+                    total+= count;
+                    outputStream.write(data,0,count);
+                    int progress = (int)total*100/file_lenght;
+                    publishProgress(progress);
+
+                }
+                mInputStream.close();
+                outputStream.close();
+
+
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return "Download Complete ..";
+        }
+
+        @Override
+        protected void onPreExecute() {
+            mProgressDialog = new ProgressDialog(MainActivity.this);
+            mProgressDialog.setTitle("downloading in Progresss..");
+            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            mProgressDialog.setMax(100);
+            mProgressDialog.setProgress(0);
+            mProgressDialog.show();
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            mProgressDialog.hide();;
+            Toast.makeText(getApplicationContext(), result, Toast.LENGTH_SHORT).show();
+            String path = "sdcard/myphotos/downloadedImage.jpg";
+            //imageView.setImageDrawable(Drawable.createFromPath(path));
+
+        }
+
+        @Override
+        protected void onCancelled(String aVoid) {
+            super.onCancelled(aVoid);
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            mProgressDialog.setProgress(values[0]);
+
+        }
+    }
 }
